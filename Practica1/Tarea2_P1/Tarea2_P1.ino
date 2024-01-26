@@ -24,7 +24,7 @@ void setup()
   Serial.begin(9600);
   
   // The timer will repeat every 10000 ms
-  timer.setInterval(1000); 
+  timer.setInterval(10000); 
 
   // The function to be called
   timer.setCallback(ADCCallback);
