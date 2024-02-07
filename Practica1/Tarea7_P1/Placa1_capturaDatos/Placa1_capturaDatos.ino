@@ -1,3 +1,4 @@
+#include <Wire.h>
 #include <Arduino_LSM9DS1.h>
 #include <timer.h>
 #include <timerManager.h>
@@ -16,15 +17,17 @@ int cont_timer = 0;
 bool flagTimer = false;
 Timer timer;
 
+// interrupcion timer
 void SampleCallback() {
   flagTimer = true;
 }
 
 void setup() {
-  
-  Serial.begin(9600);
+  Serial.begin(9600);  // abre el puerto serie
   while (!Serial)
-    ;
+    ;            // garantiza que hay algo al otro lado de la conexion USB
+  Wire.begin();  // join i2c bus (address optional for writer)
+
   Serial.println("Started");
 
   if (!IMU.begin()) {
@@ -32,16 +35,16 @@ void setup() {
     while (1)
       ;
   }
-
-  timer.setInterval(1000);
+  // los datos de los sensores se muestrean cada 200 ms 
+  timer.setInterval(200);
   timer.setCallback(SampleCallback);
   timer.start();
 }
 
 void loop() {
-
   if (flagTimer) {  //Interrupcion
 
+    // captura de los valores del giroscopo
     if (IMU.gyroscopeAvailable()) {
       IMU.readGyroscope(x_giro, y_giro, z_giro);
     }
@@ -49,8 +52,7 @@ void loop() {
     vec_y_giro[cont_timer] = y_giro;
     vec_z_giro[cont_timer] = z_giro;
 
-
-
+    // captura de los valores del magnetometro
     if (IMU.magneticFieldAvailable()) {
       IMU.readMagneticField(x_mag, y_mag, z_mag);
     }
@@ -58,7 +60,7 @@ void loop() {
     vec_y_mag[cont_timer] = y_mag;
     vec_z_mag[cont_timer] = z_mag;
 
-
+    // captura de los valores del acelerometro
     if (IMU.accelerationAvailable()) {
       IMU.readAcceleration(x_acel, y_acel, z_acel);
     }
@@ -90,37 +92,19 @@ void loop() {
     vec_y_acel[cont_timer] = degreesY;
     vec_z_acel[cont_timer] = degreesZ;
 
+    // incremento del valor del contador y actualización del flag de la interrupcion
     cont_timer = cont_timer + 1;
     flagTimer = false;
   }
 
-
   if (cont_timer == 5) {
-    Serial.println("magnetometro (uT)                        acelerometro                                                        giroscopo ");
-    for (int i = 0; i < 5; i++) {
-      Serial.print("x: ");
-      Serial.print(vec_x_mag[i]);
-      Serial.print(" , y: ");
-      Serial.print(vec_y_mag[i]);
-      Serial.print(" , z: ");
-      Serial.print(vec_z_mag[i]);
-
-      Serial.print("        degreesX: ");
-      Serial.print(vec_x_acel[i]);
-      Serial.print(" , degreesY: ");
-      Serial.print(vec_y_acel[i]);
-      Serial.print(" , degreesZ: ");
-      Serial.print(vec_z_acel[i]);
-
-      Serial.print("        x: ");
-      Serial.print(vec_x_giro[i]);
-      Serial.print(" , y: ");
-      Serial.print(vec_y_giro[i]);
-      Serial.print(" , z: ");
-      Serial.println(vec_z_giro[i]);
-    }
+    Wire.beginTransmission(8);  // iniciar la transmision al dispositivo 8 
+    // COMO ENVIAR TODOS LOS VECTORES CON LOS DATOS DE LOS SENSORES
+    Wire.write(ledVal);         // sends the given value
+    Wire.endTransmission();     // stop transmitting
+    delay(500);
     cont_timer = 0;
   }
-
   timer.update();
 }
+
