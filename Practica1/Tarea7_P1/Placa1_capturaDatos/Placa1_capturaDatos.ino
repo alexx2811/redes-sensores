@@ -7,6 +7,7 @@
 float vec_x_mag[5], vec_y_mag[5], vec_z_mag[5] = {};
 float vec_x_acel[5], vec_y_acel[5], vec_z_acel[5] = {};
 float vec_x_giro[5], vec_y_giro[5], vec_z_giro[5] = {};
+float matriz_datos_Sensores [3][15];
 float x_acel, y_acel, z_acel;
 float x_mag, y_mag, z_mag;
 float x_giro, y_giro, z_giro;
@@ -24,16 +25,14 @@ void SampleCallback() {
 
 void setup() {
   Serial.begin(9600);  // abre el puerto serie
-  while (!Serial)
-    ;            // garantiza que hay algo al otro lado de la conexion USB
+  while (!Serial);            // garantiza que hay algo al otro lado de la conexion USB
   Wire.begin();  // join i2c bus (address optional for writer)
 
   Serial.println("Started");
 
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
-    while (1)
-      ;
+    while (1);
   }
   // los datos de los sensores se muestrean cada 200 ms 
   timer.setInterval(200);
@@ -100,7 +99,7 @@ void loop() {
   if (cont_timer == 5) {
     Wire.beginTransmission(8);  // iniciar la transmision al dispositivo 8 
     // COMO ENVIAR TODOS LOS VECTORES CON LOS DATOS DE LOS SENSORES
-    Wire.write(ledVal);         // sends the given value
+    Wire.write();         // sends the given value
     Wire.endTransmission();     // stop transmitting
     delay(500);
     cont_timer = 0;
