@@ -1,13 +1,15 @@
+#include <avr/pgmspace.h>
 #include <Wire.h>
 #include <Arduino_LSM9DS1.h>
 #include <timer.h>
 #include <timerManager.h>
 #include "timer.h"
 
+
 float vec_x_mag[5], vec_y_mag[5], vec_z_mag[5] = {};
 float vec_x_acel[5], vec_y_acel[5], vec_z_acel[5] = {};
 float vec_x_giro[5], vec_y_giro[5], vec_z_giro[5] = {};
-float matriz_datos_Sensores [3][15];
+float matriz_datos_Sensores[5][9];
 float x_acel, y_acel, z_acel;
 float x_mag, y_mag, z_mag;
 float x_giro, y_giro, z_giro;
@@ -16,6 +18,8 @@ int degreesY = 0;
 int degreesZ = 0;
 int cont_timer = 0;
 bool flagTimer = false;
+char datosenviados[16];
+float datos; 
 Timer timer;
 
 // interrupcion timer
@@ -25,7 +29,8 @@ void SampleCallback() {
 
 void setup() {
   Serial.begin(9600);  // abre el puerto serie
-  while (!Serial);            // garantiza que hay algo al otro lado de la conexion USB
+  while (!Serial);   
+  // garantiza que hay algo al otro lado de la conexion USB
   Wire.begin();  // join i2c bus (address optional for writer)
 
   Serial.println("Started");
@@ -34,7 +39,7 @@ void setup() {
     Serial.println("Failed to initialize IMU!");
     while (1);
   }
-  // los datos de los sensores se muestrean cada 200 ms 
+  // los datos de los sensores se muestrean cada 200 ms
   timer.setInterval(200);
   timer.setCallback(SampleCallback);
   timer.start();
@@ -47,17 +52,17 @@ void loop() {
     if (IMU.gyroscopeAvailable()) {
       IMU.readGyroscope(x_giro, y_giro, z_giro);
     }
-    vec_x_giro[cont_timer] = x_giro;
-    vec_y_giro[cont_timer] = y_giro;
-    vec_z_giro[cont_timer] = z_giro;
+    matriz_datos_Sensores[cont_timer][0] = x_giro;
+    matriz_datos_Sensores[cont_timer][1] = y_giro;
+    matriz_datos_Sensores[cont_timer][2] = z_giro;
 
     // captura de los valores del magnetometro
     if (IMU.magneticFieldAvailable()) {
       IMU.readMagneticField(x_mag, y_mag, z_mag);
     }
-    vec_x_mag[cont_timer] = x_mag;
-    vec_y_mag[cont_timer] = y_mag;
-    vec_z_mag[cont_timer] = z_mag;
+    matriz_datos_Sensores[cont_timer][3] = x_mag;
+    matriz_datos_Sensores[cont_timer][4] = y_mag;
+    matriz_datos_Sensores[cont_timer][5] = z_mag;
 
     // captura de los valores del acelerometro
     if (IMU.accelerationAvailable()) {
@@ -87,23 +92,29 @@ void loop() {
       z_acel = 100 * z_acel;
       degreesZ = map(z_acel, 0, -100, 0, 90);
     }
-    vec_x_acel[cont_timer] = degreesX;
-    vec_y_acel[cont_timer] = degreesY;
-    vec_z_acel[cont_timer] = degreesZ;
+    matriz_datos_Sensores[cont_timer][6] = degreesX;
+    matriz_datos_Sensores[cont_timer][7] = degreesY;
+    matriz_datos_Sensores[cont_timer][8] = degreesZ;
 
-    // incremento del valor del contador y actualización del flag de la interrupcion
+    //actualización del flag de la interrupcion
     cont_timer = cont_timer + 1;
     flagTimer = false;
   }
 
   if (cont_timer == 5) {
-    Wire.beginTransmission(8);  // iniciar la transmision al dispositivo 8 
-    // COMO ENVIAR TODOS LOS VECTORES CON LOS DATOS DE LOS SENSORES
-    Wire.write();         // sends the given value
-    Wire.endTransmission();     // stop transmitting
+    Wire.beginTransmission(8);  // iniciar la transmision al dispositivo 8
+
+    for (int f = 0; f < 5; f++) {
+      for (int c = 0; c < 9; c++) {
+        datos = matriz_datos_Sensores[f][c];
+        sprintf(datosenviados, "%.5f", datos); // "%.5f" es el formato que indica a sprintf() que formatee el float con 5 digitos después del número decimal 
+        Wire.write(datosenviados);
+      }
+    }
+    // sends the given value
+    Wire.endTransmission();  // stop transmitting
     delay(500);
     cont_timer = 0;
   }
   timer.update();
 }
-
