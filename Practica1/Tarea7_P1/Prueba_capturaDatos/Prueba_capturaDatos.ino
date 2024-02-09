@@ -10,6 +10,8 @@ float vec_x_mag[5], vec_y_mag[5], vec_z_mag[5] = {};
 float vec_x_acel[5], vec_y_acel[5], vec_z_acel[5] = {};
 float vec_x_giro[5], vec_y_giro[5], vec_z_giro[5] = {};
 float matriz_datos_Sensores[5][9];
+int rows=5;
+int cols=9;
 float x_acel, y_acel, z_acel;
 float x_mag, y_mag, z_mag;
 float x_giro, y_giro, z_giro;
@@ -18,8 +20,6 @@ int degreesY = 0;
 int degreesZ = 0;
 int cont_timer = 0;
 bool flagTimer = false;
-char datosenviados[16];
-float datos; 
 Timer timer;
 
 // interrupcion timer
@@ -47,7 +47,7 @@ void setup() {
 
 void loop() {
   if (flagTimer) {  //Interrupcion
-
+    Serial.println(cont_timer);
     // captura de los valores del giroscopo
     if (IMU.gyroscopeAvailable()) {
       IMU.readGyroscope(x_giro, y_giro, z_giro);
@@ -104,16 +104,10 @@ void loop() {
   if (cont_timer == 5) {
     Wire.beginTransmission(8);  // iniciar la transmision al dispositivo 8
 
-    for (int f = 0; f < 5; f++) {
-      for (int c = 0; c < 9; c++) {
-        datos = matriz_datos_Sensores[f][c];
-        sprintf(datosenviados, "%.5f", datos); // "%.5f" es el formato que indica a sprintf() que formatee el float con 5 digitos después del número decimal 
-        Wire.write(datosenviados);
-      }
-    }
+    Wire.write((byte*)matriz_datos_Sensores, sizeof(float) * rows * cols);  // Envía la matriz como bytes
     // sends the given value
     Wire.endTransmission();  // stop transmitting
-    delay(500);
+    
     cont_timer = 0;
   }
   timer.update();
