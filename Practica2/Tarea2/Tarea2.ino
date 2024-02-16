@@ -2,6 +2,8 @@
 
 
 
+
+
 /* Edge Impulse ingestion SDK
  * Copyright (c) 2022 EdgeImpulse Inc.
  *
@@ -127,11 +129,11 @@ void loop()
 
         print_results = 0;
     }
-  if(result.classification[0].value>0.95) {
-     digitalWrite(LED_BUILTIN, HIGH);
-     delay(200);
-     digitalWrite(LED_BUILTIN, HIGH);
-  }
+    if(result.classification[0].value>0.9) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(100);
+      digitalWrite(LED_BUILTIN, LOW);
+    }
 
 }
 
