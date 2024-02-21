@@ -1,26 +1,6 @@
 #include <Universidad_de_Zaragoza-project-1_inferencing.h>
 
 
-
-
-
-/* Edge Impulse ingestion SDK
- * Copyright (c) 2022 EdgeImpulse Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
-// If your target is limited in memory remove this macro to save 10K RAM
 #define EIDSP_QUANTIZE_FILTERBANK   0
 
 /**
@@ -129,7 +109,7 @@ void loop()
 
         print_results = 0;
     }
-    if(result.classification[0].value>0.9) {
+    if(result.classification[0].value>0.95) {
       digitalWrite(LED_BUILTIN, HIGH);
       delay(100);
       digitalWrite(LED_BUILTIN, LOW);
