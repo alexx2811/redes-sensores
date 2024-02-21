@@ -1,3 +1,5 @@
+
+
 /* Edge Impulse ingestion SDK
  * Copyright (c) 2022 EdgeImpulse Inc.
  *
@@ -140,46 +142,64 @@ void run_inference_background() {
     }
     ei_printf("]\n");
      // PITCH NEGATIVO: LED AMARILLO 
-    if (smooth.count[0] > 0.9) {
+    if (result.classification[0].value > 0.8) {
       digitalWrite(LEDR, LOW);
       digitalWrite(LEDG, LOW);
       digitalWrite(LEDB, HIGH);
       delay(100);
+      digitalWrite(LEDR, HIGH);
+      digitalWrite(LEDG, HIGH);
+      digitalWrite(LEDB, HIGH);
     }
     // PITCH POSITIVO: LED VERDE 
-    if (smooth.count[1] > 0.9) {
+    if (result.classification[1].value > 0.8) {
       digitalWrite(LEDR, HIGH);
       digitalWrite(LEDG, LOW);
       digitalWrite(LEDB, HIGH);
       delay(100);
+      digitalWrite(LEDR, HIGH);
+      digitalWrite(LEDG, HIGH);
+      digitalWrite(LEDB, HIGH);
     }
     // ROLL NEGATIVO: LED ROSA 
-    if (smooth.count[2] > 0.9) {
+    if (result.classification[2].value > 0.8) {
       digitalWrite(LEDR, LOW);
       digitalWrite(LEDG, HIGH);
       digitalWrite(LEDB, LOW);
       delay(100);
+      digitalWrite(LEDR, HIGH);
+      digitalWrite(LEDG, HIGH);
+      digitalWrite(LEDB, HIGH);
     }
     // ROLL POSITIVO: LED ROJO 
-    if (smooth.count[3] > 0.9) {
+    if (result.classification[3].value > 0.8) {
       digitalWrite(LEDR, LOW);
       digitalWrite(LEDG, HIGH);
       digitalWrite(LEDB, HIGH);
       delay(100);
+      digitalWrite(LEDR, HIGH);
+      digitalWrite(LEDG, HIGH);
+      digitalWrite(LEDB, HIGH);
     }
     // YAW NEGATIVO: LED MORADO // blanco
-    if (smooth.count[4] > 0.9) {
+    if (result.classification[4].value > 0.8) {
       digitalWrite(LEDR, LOW);
       digitalWrite(LEDG, LOW);
       digitalWrite(LEDB, LOW);
       delay(100);
+      digitalWrite(LEDR, HIGH);
+      digitalWrite(LEDG, HIGH);
+      digitalWrite(LEDB, HIGH);
     }
     // YAW POSITIVO: LED AZUL 
-    if (smooth.count[5] > 0.9) {
+    if (result.classification[5].value > 0.8) {
       digitalWrite(LEDR, HIGH);
       digitalWrite(LEDG, HIGH);
       digitalWrite(LEDB, LOW);
       delay(100);
+      digitalWrite(LEDR, HIGH);
+      digitalWrite(LEDG, HIGH);
+      digitalWrite(LEDB, HIGH);
     }
     delay(run_inference_every_ms);
   }
@@ -212,11 +232,9 @@ void loop() {
     delay((int)floor((float)time_to_wait / 1000.0f));
     delayMicroseconds(time_to_wait % 1000);
 
-   
-
   }
 }
 
 #if !defined(EI_CLASSIFIER_SENSOR) || EI_CLASSIFIER_SENSOR != EI_CLASSIFIER_SENSOR_ACCELEROMETER
-#error "Invalid model for current sensor"
+//#error "Invalid model for current sensor"
 #endif
