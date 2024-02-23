@@ -152,7 +152,7 @@ void run_inference_background() {
       digitalWrite(LEDB, HIGH);
     }
     // PITCH POSITIVO: LED VERDE 
-    if (result.classification[1].value > 0.8) {
+    else if (result.classification[1].value > 0.8) {
       digitalWrite(LEDR, HIGH);
       digitalWrite(LEDG, LOW);
       digitalWrite(LEDB, HIGH);
@@ -162,7 +162,7 @@ void run_inference_background() {
       digitalWrite(LEDB, HIGH);
     }
     // ROLL NEGATIVO: LED ROSA 
-    if (result.classification[2].value > 0.8) {
+    else if (result.classification[2].value > 0.8) {
       digitalWrite(LEDR, LOW);
       digitalWrite(LEDG, HIGH);
       digitalWrite(LEDB, LOW);
@@ -172,7 +172,7 @@ void run_inference_background() {
       digitalWrite(LEDB, HIGH);
     }
     // ROLL POSITIVO: LED ROJO 
-    if (result.classification[3].value > 0.8) {
+    else if (result.classification[3].value > 0.8) {
       digitalWrite(LEDR, LOW);
       digitalWrite(LEDG, HIGH);
       digitalWrite(LEDB, HIGH);
@@ -182,7 +182,7 @@ void run_inference_background() {
       digitalWrite(LEDB, HIGH);
     }
     // YAW NEGATIVO: LED MORADO // blanco
-    if (result.classification[4].value > 0.8) {
+    else if (result.classification[4].value > 0.8) {
       digitalWrite(LEDR, LOW);
       digitalWrite(LEDG, LOW);
       digitalWrite(LEDB, LOW);
@@ -192,7 +192,7 @@ void run_inference_background() {
       digitalWrite(LEDB, HIGH);
     }
     // YAW POSITIVO: LED AZUL 
-    if (result.classification[5].value > 0.8) {
+    else if (result.classification[5].value > 0.8) {
       digitalWrite(LEDR, HIGH);
       digitalWrite(LEDG, HIGH);
       digitalWrite(LEDB, LOW);
@@ -200,6 +200,12 @@ void run_inference_background() {
       digitalWrite(LEDR, HIGH);
       digitalWrite(LEDG, HIGH);
       digitalWrite(LEDB, HIGH);
+    }
+    else {
+      digitalWrite(LEDR, HIGH);
+      digitalWrite(LEDG, HIGH);
+      digitalWrite(LEDB, HIGH);
+      delay(100);
     }
     delay(run_inference_every_ms);
   }
