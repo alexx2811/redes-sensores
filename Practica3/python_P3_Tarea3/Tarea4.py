@@ -13,7 +13,7 @@ def main():
     datosY_acumulados = []
     datosZ_acumulados = []
     tiempo_inicio = time.time()
-    tiempo_limite = 5  # 5 segundos
+    tiempo_limite = 10  # 10 segundos
 
     # Variables para graficar en tiempo real
     tiempos = []
@@ -32,57 +32,61 @@ def main():
 
         while (time.time() - tiempo_inicio) < tiempo_limite:
             # Lee un línea de datos desde el puerto serie
-            linea = puerto_serie.readline().decode('utf-8').strip()
-            datossensor= linea.split(';')
-            if (len(datossensor) > 2):
-                # Convierte la línea a un número (puedes ajustar esto según el formato de tus datos)
-                datoX = float(datossensor[0])
-                datoY = float(datossensor[1])
-                datoZ = float(datossensor[2])
+            linea = puerto_serie.readline().decode('utf-8').strip() #UTF-8 String
+            datossensor= linea.split(';') #separa los datos de linea detectando ;
 
-                # Muestra la línea de datos en la pantalla
-                print(linea)
+            #if (len(datossensor) > 2): #poner solo si se lee 0 indeseados por el puerto serie
 
-                # Acumula los datos
-                datosX_acumulados.append(datoX)
-                datosY_acumulados.append(datoY)
-                datosZ_acumulados.append(datoZ)
+            # Convierte la línea a un número
+            datoX = float(datossensor[0])
+            datoY = float(datossensor[1])
+            datoZ = float(datossensor[2])
 
-                # Obtiene el tiempo actual en formato Unix
-                tiempo_actual = time.time()
+            # Muestra la línea de datos en la pantalla
+            print(linea)
 
-                # Actualiza las listas para la visualización en tiempo real
-                tiempos.append(tiempo_actual - tiempo_inicio)
-                promedioX_actual = statistics.mean(datosX_acumulados)
-                promedioY_actual = statistics.mean(datosY_acumulados)
-                promedioZ_actual = statistics.mean(datosZ_acumulados)
-                promediosX.append(promedioX_actual)
-                promediosY.append(promedioY_actual)
-                promediosZ.append(promedioZ_actual)
-                if( len(datosX_acumulados) >=2):
-                    desviacionX_actual = statistics.stdev(datosX_acumulados)
-                    desviacionY_actual = statistics.stdev(datosY_acumulados)
-                    desviacionZ_actual = statistics.stdev(datosZ_acumulados)
-                    desviacionesX.append(desviacionX_actual)
-                    desviacionesY.append(desviacionY_actual)
-                    desviacionesZ.append(desviacionZ_actual)
+            # Acumula los datos
+            datosX_acumulados.append(datoX)
+            datosY_acumulados.append(datoY)
+            datosZ_acumulados.append(datoZ)
+
+            # Obtiene el tiempo actual
+            tiempo_actual = time.time()
+
+            # Actualiza las listas
+            tiempos.append(tiempo_actual - tiempo_inicio)
+            promedioX_actual = statistics.mean(datosX_acumulados)
+            promedioY_actual = statistics.mean(datosY_acumulados)
+            promedioZ_actual = statistics.mean(datosZ_acumulados)
+            promediosX.append(promedioX_actual)
+            promediosY.append(promedioY_actual)
+            promediosZ.append(promedioZ_actual)
+            if( len(datosX_acumulados) >=2):
+                desviacionX_actual = statistics.stdev(datosX_acumulados)
+                desviacionY_actual = statistics.stdev(datosY_acumulados)
+                desviacionZ_actual = statistics.stdev(datosZ_acumulados)
+                desviacionesX.append(desviacionX_actual)
+                desviacionesY.append(desviacionY_actual)
+                desviacionesZ.append(desviacionZ_actual)
 
 
 
-                # Grafica en tiempo real
-                plt.plot(tiempos, promediosX, label='PromedioX')
-                plt.plot(tiempos, promediosY, label='PromedioY')
-                plt.plot(tiempos, promediosZ, label='PromedioZ')
-                plt.plot(tiempos, desviacionesX, label='DesviaciónX')
-                plt.plot(tiempos, desviacionesY, label='DesviaciónY')
-                plt.plot(tiempos, desviacionesZ, label='DesviaciónZ')
-                plt.xlabel('Tiempo (s)')
-                plt.ylabel('Valor')
-                plt.legend()
-                plt.pause(0.1)  # Pausa para actualizar la gráfica
+            # Grafica en tiempo real
+            plt.plot(tiempos, promediosX, label='PromedioX')
+            plt.plot(tiempos, promediosY, label='PromedioY')
+            plt.plot(tiempos, promediosZ, label='PromedioZ')
+            plt.plot(tiempos, desviacionesX, label='DesviaciónX')
+            plt.plot(tiempos, desviacionesY, label='DesviaciónY')
+            plt.plot(tiempos, desviacionesZ, label='DesviaciónZ')
+            plt.xlabel('Tiempo (s)')
+            plt.ylabel('Valor')
+            plt.legend()
+            plt.pause(0.1)  # Pausa para actualizar la gráfica
 
-        # Imprime el promedio y la desviación estándar final
-        #print(f'\nPromedio final: {promedio_actual}')
+        # Imprime el promedio y la desviación final
+        print(f'\nPromedioX: {promedioX_actual}')
+        print(f'\nPromedioY: {promedioY_actual}')
+        print(f'\nPromedioZ: {promedioZ_actual}')
         #print(f'Desviación estándar final: {desviacion_estandar_actual}')
 
     except KeyboardInterrupt:
