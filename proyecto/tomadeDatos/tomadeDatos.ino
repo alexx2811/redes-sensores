@@ -28,7 +28,7 @@ void setup() {
     while (1)
       ;
   }
-  // muestreo cada 2 ms
+  // muestreo cada 2 ms (500 Hz)
   timer.setInterval(2);
   timer.setCallback(SampleCallback);
   timer.start();
@@ -38,40 +38,16 @@ void loop() {
 
   if (flagTimer) {  //Interrupcion
 
-    if (IMU.gyroscopeAvailable()) {
+    if (IMU.gyroscopeAvailable()) { // unidades grados por segundo
       IMU.readGyroscope(x_giro, y_giro, z_giro);
     }
 
-    if (IMU.magneticFieldAvailable()) {
+    if (IMU.magneticFieldAvailable()) { // unidades uTeslas
       IMU.readMagneticField(x_mag, y_mag, z_mag);
     }
 
-    if (IMU.accelerationAvailable()) {
+    if (IMU.accelerationAvailable()) { // unidades G's
       IMU.readAcceleration(x_acel, y_acel, z_acel);
-    }
-    if (x_acel > 0.1) {
-      x_acel = 100 * x_acel;
-      degreesX = map(x_acel, 0, 97, 0, 90);
-    }
-    if (x_acel < -0.1) {
-      x_acel = 100 * x_acel;
-      degreesX = map(x_acel, 0, -100, 0, 90);
-    }
-    if (y_acel > 0.1) {
-      y_acel = 100 * y_acel;
-      degreesY = map(y_acel, 0, 97, 0, 90);
-    }
-    if (y_acel < -0.1) {
-      y_acel = 100 * y_acel;
-      degreesY = map(y_acel, 0, -100, 0, 90);
-    }
-    if (z_acel > 0.1) {
-      z_acel = 100 * z_acel;
-      degreesZ = map(z_acel, 0, 97, 0, 90);
-    }
-    if (z_acel < -0.1) {
-      z_acel = 100 * z_acel;
-      degreesZ = map(z_acel, 0, -100, 0, 90);
     }
 
     flagTimer = false;
