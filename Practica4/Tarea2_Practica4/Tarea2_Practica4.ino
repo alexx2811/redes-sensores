@@ -28,7 +28,6 @@ void setup() {
   // begin initialization
   if (!BLE.begin()) {
     Serial.println("starting Bluetooth® Low Energy failed!");
-
     while (1);
   }
 
@@ -47,7 +46,6 @@ void setup() {
 
   // start advertising
   BLE.advertise();
-
   Serial.println("BLE LED Peripheral");
 }
 
@@ -58,7 +56,7 @@ void loop() {
   // if a central is connected to peripheral:
   if (central) {
     Serial.print("Connected to central: ");
-    // print the central's MAC address:
+    // print the central's MAC address: configura la dirección del dispositivo "central"
     Serial.println(central.address());
     digitalWrite(LED_BUILTIN, HIGH);            // turn on the LED to indicate the connection
 
