@@ -50,13 +50,11 @@ void loop() {
     }
   }
   
-  client.print("X_acel = ");
+
   client.print(random(1,100));
   client.print(", ");
-  client.print("Y_acel = ");
   client.print(random(1,100));
   client.print(", ");
-  client.print("Z_acel = ");
   client.println(random(1,100));
-  delay(100);
+  delay(1000);
 }
