@@ -4,12 +4,11 @@
 
 const char* ssid = "Marta";
 const char* password = "Marta2001";
-const char* host = "172.20.10.3";  // Puedes usar la dirección IP o el nombre de dominio
+const char* host = "172.20.10.9";  // Pc: "172.20.10.9"     movil :"172.20.10.3";
 const int puerto= 4096;
 bool EnviarDatos = false;
 String dato;
 WiFiClient client;
-
 
 
 
@@ -28,7 +27,6 @@ void setup() {
 
   if (client.connect(host, puerto)) {
     Serial.println("Connected to server");
-    // Realizar acciones adicionales después de la conexión exitosa
   } else {
     Serial.println("Connection failed");
   }
