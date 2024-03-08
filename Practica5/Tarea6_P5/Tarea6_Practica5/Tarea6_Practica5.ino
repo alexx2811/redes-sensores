@@ -4,24 +4,12 @@
 
 const char* ssid = "Marta";
 const char* password = "Marta2001";
-const char* host = "172.20.10.3";  // Puedes usar la dirección IP o el nombre de dominio
+const char* host = "172.20.10.9";  // Pc: "172.20.10.9"     movil :"172.20.10.3";
 const int puerto= 4096;
-const char* ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 3600;  //Zona horario UTC+1
-const int daylightOffset_sec = 3600;
 bool EnviarDatos = false;
 String dato;
 WiFiClient client;
 
-
-void printLocalTime() {
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo)) {
-    Serial.println("Failed to obtain time");
-    return;
-  }
-  client.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-}
 
 
 void setup() {
@@ -36,12 +24,9 @@ void setup() {
   }
   Serial.println(" CONNECTED to WIFI");
 
-  //init and get the time
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   if (client.connect(host, puerto)) {
     Serial.println("Connected to server");
-    // Realizar acciones adicionales después de la conexión exitosa
   } else {
     Serial.println("Connection failed");
   }
@@ -61,22 +46,15 @@ void loop() {
       // Realizar acciones adicionales después de la reconexión exitosa
     } else {
       Serial.println("Reconnection failed");
+      delay(500);
     }
   }
+  
 
-  if (client.available()) {
-    Serial.println("Message from server:");
-    dato = client.readStringUntil('\n');
-    Serial.println(dato);
-    if (dato == "start")
-      EnviarDatos = true;
-    if (dato == "stop")
-      EnviarDatos = false;
-  }
-
-  // Enviar datos al servidor
-  if (EnviarDatos) {
-    printLocalTime();
-  }
+  client.print(random(1,100));
+  client.print(", ");
+  client.print(random(1,100));
+  client.print(", ");
+  client.println(random(1,100));
   delay(1000);
 }
