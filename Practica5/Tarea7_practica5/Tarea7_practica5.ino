@@ -1,88 +1,53 @@
-/*********
-  Rui Santos
-  Complete project details at https://randomnerdtutorials.com  
-*********/
+#include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include "time.h"
 
-// Import required libraries
-#include "WiFi.h"
-#include "ESPAsyncWebServer.h"
-#include "SPIFFS.h"
-
-// Replace with your network credentials
+// Reemplaza con tu SSID y contraseña
 const char* ssid = "Marta";
 const char* password = "Marta2001";
 
-// Set LED GPIO
-const int ledPin = 2;
-// Stores LED state
-String ledState;
+const char* ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = 3600;
+const int daylightOffset_sec = 3600;
 
-// Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
-// Replaces placeholder with LED state value
-String processor(const String& var){
-  Serial.println(var);
-  if(var == "STATE"){
-    if(digitalRead(ledPin)){
-      ledState = "ON";
-    }
-    else{
-      ledState = "OFF";
-    }
-    Serial.print(ledState);
-    return ledState;
-  }
-  return String();
-}
- 
 void setup(){
-  // Serial port for debugging purposes
-  Serial.begin(115200);
-  pinMode(ledPin, OUTPUT);
+ Serial.begin(115200);
 
-  // Initialize SPIFFS
-  if(!SPIFFS.begin(true)){
-    Serial.println("An Error has occurred while mounting SPIFFS");
-    return;
-  }
+ WiFi.begin(ssid, password);
 
-  // Connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
+ while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Connecting to WiFi..");
-  }
+    Serial.println("Conectando a WiFi...");
+ }
+ Serial.println(WiFi.localIP());
 
-  // Print ESP32 Local IP Address
-  Serial.println(WiFi.localIP());
+ configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
-  // Route for root / web page
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
-  
-  // Route to load style.css file
-  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/style.css", "text/css");
-  });
+ server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    struct tm timeinfo;
+    if(!getLocalTime(&timeinfo)){
+       Serial.println("Fallo al obtener la hora");
+       return;
+    }
+    String html = "<html><body>";
+    html += "<h1>Hora actual: " + String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min) + ":" + String(timeinfo.tm_sec) + "</h1>";
+    html += "<button onclick=\"location.href='/reset'\">Resetear hora</button>";
+    html += "</body></html>";
+    request->send(200, "text/html", html);
+ });
 
-  // Route to set GPIO to HIGH
-  server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request){
-    digitalWrite(ledPin, HIGH);    
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
-  
-  // Route to set GPIO to LOW
-  server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request){
-    digitalWrite(ledPin, LOW);    
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
+ server.on("/reset", HTTP_GET, [](AsyncWebServerRequest *request){
+    // Aquí puedes resetear la hora
+    Serial.println("Hora reseteada a 00:00:00");
+    // Asegúrate de resetear la hora en tu RTC o en tu variable de tiempo
+    request->send(200, "text/plain", "Hora reseteada");
+ });
 
-  // Start server
-  server.begin();
+ server.begin();
 }
- 
+
 void loop(){
-  
+ // Aquí puedes actualizar la hora si es necesario
 }
