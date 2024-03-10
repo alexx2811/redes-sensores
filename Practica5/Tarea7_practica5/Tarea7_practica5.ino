@@ -33,7 +33,9 @@ void setup(){
     }
     String html = "<html><body>";
     html += "<h1>Hora actual: " + String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min) + ":" + String(timeinfo.tm_sec) + "</h1>";
+    // colocar un elemento "boton" al HTML para resetear la hora actual 
     html += "<button onclick=\"location.href='/reset'\">Resetear hora</button>";
+    // etiquetas para asegurar la estructura promia de HTML
     html += "</body></html>";
     request->send(200, "text/html", html);
  });
@@ -42,12 +44,11 @@ void setup(){
     // Aquí puedes resetear la hora
     Serial.println("Hora reseteada a 00:00:00");
     // Asegúrate de resetear la hora en tu RTC o en tu variable de tiempo
-    request->send(200, "text/plain", "Hora reseteada");
+    request->send(200, "text/html", "<h1>Hora reseteada a 00:00:00<h1>");
  });
 
  server.begin();
 }
 
 void loop(){
- // Aquí puedes actualizar la hora si es necesario
 }
