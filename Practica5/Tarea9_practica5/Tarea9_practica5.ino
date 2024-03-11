@@ -1,113 +1,82 @@
-#include <FTPClient_Generic.h>
-#include <FTPClient_Generic.hpp>
-#include <TimeLib.h>
+#include <ArduinoJson.h>
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <ESP32_FTPClient.h>
 
+const char* ssid = "Marta";
+const char* password = "Marta2001";
 
-const char* ssid = "Marta"; // Nombre de tu red WiFi
-const char* password = "Marta2001"; // Contraseña de tu red WiFi
+char ftp_server[] = "155.210.150.77";
+char ftp_user[] = "rsense";
+char ftp_pass[] = "rsense";
+char ftp_directory[] = "/rsense/809847";
 
-const char* ftpServer = "127.0.0.1"; // Dirección IP del servidor FTP
-const uint16_t ftpPort = 14148; // Puerto del servidor FTP
-const char* ftpUser = "rsense"; // Nombre de usuario del servidor FTP
-const char* ftpPassword = "marta"; // Contraseña del servidor FTP
+// inicializacion FTP Client
+ESP32_FTPClient ftp(ftp_server, ftp_user, ftp_pass, 5000, 2);
 
-const unsigned long interval = 10000; // Intervalo de tiempo entre cada lectura en milisegundos (10 segundos)
+const unsigned long interval = 10000;  // Intervalo de tiempo entre cada lectura en milisegundos (10 segundos)
 unsigned long previousMillis = 0;
 
-WiFiClient ftpClient;
-
 void setup() {
-  Serial.begin(115200);
-  delay(10);
+  // inicializacion del puerto serie
+  Serial.begin(9600);
 
-  // Conexión a WiFi
-  Serial.println();
-  Serial.println();
-  Serial.print("Conectando a ");
-  Serial.println(ssid);
-
+  // Conexión a la red WiFi
+  Serial.printf("Connecting to %s ", ssid);
   WiFi.begin(ssid, password);
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-
-  Serial.println("");
-  Serial.println("Conectado a la red WiFi");
-  Serial.println("Dirección IP: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(" CONNECTED TO WIFI");
 }
 
 void loop() {
   unsigned long currentMillis = millis();
-  
+  // comprobar la conexion al servidor FTP
+  if (!ftp.isConnected()) {
+    ftp.OpenConnection();
+  }
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
-    
-    float temperature = obtenerTemperatura();
-
-    guardarJSON(temperature);
+    guardar_subir_JSON();
   }
 }
 
-float obtenerTemperatura() {
-  // Generación de temperatura aleatoria entre 20°C y 30°C
-  return random(2000, 3000) / 100.0;
-}
+void guardar_subir_JSON() {
+  // generacion del archivo JSON
+  StaticJsonDocument<200> doc;  // documento JSON
 
-void guardarJSON(float temperatura) {
-  // Crear el nombre del archivo basado en la fecha y hora actual
-  char filename[20];
-  sprintf(filename, "grupo01_%02d%02d%02d.json", day(), month(), year() % 100);
+  doc["bt"] = millis() / 1000;  // Marca de tiempo actual en segundos
+  doc["n"] = "temperatua";
+  doc["u"] = "ºC";
+  doc["v"] = random(200, 300) / 10.0;  // generacion de los valores de temperatura
 
-  // Abrir conexión FTP
-  if (ftpClient.connect(ftpServer, ftpPort)) {
-    Serial.println("Conectado al servidor FTP");
-    
-    // Iniciar sesión en el servidor FTP
-    if (ftpClient.login(ftpUser, ftpPassword)) {
-      Serial.println("Inicio de sesión exitoso");
-
-      // Abrir el archivo en modo escritura binaria
-      if (ftpClient.put(filename)) {
-        Serial.println("Archivo enviado correctamente");
-
-        // Generar el contenido JSON
-        String output = generarJSON(temperatura);
-
-        // Enviar el contenido JSON al servidor FTP
-        ftpClient.print(output);
-        ftpClient.stop();
-
-        Serial.println("Datos enviados al servidor FTP");
-      } else {
-        Serial.println("Error al abrir el archivo en el servidor FTP");
-      }
-    } else {
-      Serial.println("Inicio de sesión fallido");
-    }
-  } else {
-    Serial.println("Conexión al servidor FTP fallida");
-  }
-}
-
-String generarJSON(float temperatura) {
-  // Crear el documento JSON
-  DynamicJsonDocument doc(256); // Tamaño del documento JSON
-
-  doc["bt"] = time(nullptr); // Marca de tiempo actual
-  JsonArray entries = doc.createNestedArray("e");
-  JsonObject entry = entries.createNestedObject();
-  entry["n"] = "temperature";
-  entry["u"] = "Cel";
-  entry["v"] = temperatura;
-
-  // Convertir el documento JSON a una cadena
   String output;
   serializeJson(doc, output);
+  Serial.println("Generacion JSON correcta");
+  Serial.println(output);
 
-  return output;
+
+  // envio del archivo JSON
+  Serial.println("Conectando al servidor FTP...");
+
+  // Si hay conexión al servidor FTP, se envian los ficheros json
+  if (ftp.isConnected()) {
+    Serial.println("Conectado al servidor FTP");
+    //nombre del archivo 809847XX.json y le asigna una base de tiempos
+    char fileName[32];
+    sprintf(fileName, "809847_%lu.json", millis() / 1000);  // %lu para generar numeros de archivo distintos
+    Serial.println(fileName);
+    ftp.InitFile("Type A");  // Transferencia de archivo ASCII
+    ftp.ChangeWorkDir(ftp_directory);  // Cambio al directorio deseado /rsense/809847
+    ftp.NewFile(fileName);             // creo el archivo
+    char json_char[output.length() + 1];
+    output.toCharArray(json_char, output.length() + 1);  // Conversion json_char en array para poder escribir(formato deseado) 
+    ftp.Write(json_char);  // Escribir en el archivo
+    ftp.CloseFile();
+    ftp.CloseConnection();
+
+  } else {
+    Serial.println("Error al conectar al servidor FTP");
+  }
 }
