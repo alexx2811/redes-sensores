@@ -1,6 +1,7 @@
 #include <Universidad_de_Zaragoza-project-1_inferencing.h>
 
 
+
 #define EIDSP_QUANTIZE_FILTERBANK   0
 
 /**
@@ -109,7 +110,7 @@ void loop()
 
         print_results = 0;
     }
-    if(result.classification[0].value>0.95) {
+    if(result.classification[0].value> 0.85 ) {
       digitalWrite(LED_BUILTIN, HIGH);
       delay(100);
       digitalWrite(LED_BUILTIN, LOW);
