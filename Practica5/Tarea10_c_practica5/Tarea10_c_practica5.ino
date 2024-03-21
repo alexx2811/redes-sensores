@@ -11,7 +11,7 @@ const char server[] = "io.adafruit.com";
 const int port = 1883; // PUERTO MQTT
 const char user[] = "809847";
 // API Key de Adafruit
-const char key[] = "aio_ufLb98Nl4vSt1uDTlzUMd3Iiz03u";
+const char key[] = "pon aqui la IO KEY"; 
 const char nombre_feed[] = "sensores";
 
 WiFiClient wifiClient;

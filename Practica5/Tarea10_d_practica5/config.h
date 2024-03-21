@@ -6,7 +6,7 @@
 #define IO_SERVER "io.adafruit.com"
 #define IO_SERVERPORT 1883
 #define IO_USERNAME  "809847" // Put your Adafruit IO username
-#define IO_KEY       "aio_ufLb98Nl4vSt1uDTlzUMd3Iiz03u" // Put your Adafruit IO AIOKEY
+#define IO_KEY       "IO KEY" // Put your Adafruit IO AIOKEY
 /*********** WIFI **************/
 
 // the AdafruitIO_WiFi client will work with the following boards:
