@@ -37,7 +37,7 @@ void setup() {
 }
 
 void loop() {
-  BLEDevice central = BLE.central();
+  BLEDevice central = BLE.central(); // dispositivo central 
 
   if (central) {
     Serial.print("Connected to central: ");

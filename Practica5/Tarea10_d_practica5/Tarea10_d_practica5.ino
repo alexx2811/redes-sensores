@@ -36,7 +36,7 @@ void setup()
   // se llama a la funcion MensajeFeed cada vez que se recibe un nuevo mensaje de adafruit io  
   feed->onMessage(MensajeFeed);
 
-  // espera a que se realice la comunicacion MQTT
+  // espera a que se realice la conexion con la comunicacion MQTT
   while(io.mqttStatus() < AIO_CONNECTED) {
     Serial.print("-");
     delay(500);
