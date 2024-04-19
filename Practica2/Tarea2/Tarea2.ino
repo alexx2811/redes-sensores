@@ -1,7 +1,5 @@
 #include <Universidad_de_Zaragoza-project-1_inferencing.h>
 
-
-
 #define EIDSP_QUANTIZE_FILTERBANK   0
 
 /**
