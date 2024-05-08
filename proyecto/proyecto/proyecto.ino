@@ -7,9 +7,14 @@
 float vec_GyroY[VECTOR_SIZE], vec_copiaGyroY[VECTOR_SIZE];
 float x_giro, y_giro, z_giro;
 int cont_vecGyroY = 0, pos_subida20, pos_bajada20, pos_final_bajada, pos_final_subida, pos_mantener, Tmuestreo = 50;
-bool flagTimerSample = false;
 float rango_detect = 20.0, rango_detect_0 = 0.0;
+bool flagTimerSample = false;
+
 Timer timer;
+
+void SampleCallback() {
+  flagTimerSample = true;
+}
 
 // Definir los estados posibles de la máquina de estados
 enum Estado {
@@ -22,14 +27,12 @@ enum Estado {
 
 Estado estadoActual = REPOSO;  // Estado inicial de la máquina de estados
 
-void SampleCallback() {
-  flagTimerSample = true;
-}
-
-
 void setup() {
   // Inicializar el puerto serie para la comunicación
   Serial.begin(9600);
+    while (!Serial)
+    ;
+  Serial.println("Started");
 
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
@@ -54,6 +57,7 @@ void loop() {
 
     vec_GyroY[cont_vecGyroY] = z_giro;  // la Ygyro del pie es la Zgyro del arduino
     cont_vecGyroY = cont_vecGyroY + 1;
+
     flagTimerSample = false;
   }
 
@@ -63,8 +67,12 @@ void loop() {
     case REPOSO:
       Serial.println ("estoy en REPOSO"); 
       Serial.println (z_giro,2);
-      if (vec_GyroY[cont_vecGyroY] < -rango_detect) {
+      Serial.print ("contador: "); 
+      Serial.println (cont_vecGyroY);
+
+      if (vec_GyroY[cont_vecGyroY] < -rango_detect_0) {
         pos_subida20 = cont_vecGyroY;
+
         Serial.println ("SUBIENDO");
         estadoActual = SUBIENDO;
       }
@@ -92,6 +100,7 @@ void loop() {
         for (int i = 0; i < VECTOR_SIZE; i++) {
           vec_copiaGyroY[i] = vec_GyroY[i];
         }
+
         cont_vecGyroY = 0;
         Serial.println ("PROCESADO");
         estadoActual = PROCESADO;
@@ -103,7 +112,6 @@ void loop() {
       int i = pos_subida20;
       float acc = 0.0, angulo_final_subida, angulo20subida, angulo_medio, angulo_max = 0.0, angulo_min = 0.0;
       int tiempo20_subida, tiempo20_bajada, tmantener, tsubida, tmantenerybajada, tTotal;
-
 
       // integracion y tiempo de la subida
       while (vec_copiaGyroY[i] < -rango_detect_0) {
@@ -147,6 +155,7 @@ void loop() {
       }
       angulo_max = angulo_max + angulo_final_subida;
       angulo_min = angulo_min + angulo_final_subida;
+
       //RESULTADOS
       tmantenerybajada = (pos_final_bajada - pos_final_subida) * Tmuestreo;
       tTotal = tsubida + tmantenerybajada;  // tiempo que permanece de puntillas
@@ -165,4 +174,5 @@ void loop() {
       estadoActual = REPOSO;
       break;
   }
+  timer.update(); 
 }
