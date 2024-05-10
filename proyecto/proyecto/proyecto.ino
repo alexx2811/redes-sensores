@@ -3,11 +3,11 @@
 #include <timerManager.h>
 #include "timer.h"
 
-#define VECTOR_SIZE 3000
-float vec_GyroY[VECTOR_SIZE], vec_copiaGyroY[VECTOR_SIZE];
+
+float vec_GyroY[3000], vec_copiaGyroY[3000];
 float x_giro, y_giro, z_giro;
 int cont_vecGyroY = 0, pos_subida20, pos_bajada20, pos_final_bajada, pos_final_subida, pos_mantener, Tmuestreo = 50;
-float rango_detect = 20.0, rango_detect_0 = 0.0;
+float rango_detect = 15.0, rango_detect_0 = 0.0;
 bool flagTimerSample = false;
 
 Timer timer;
@@ -34,11 +34,17 @@ void setup() {
     ;
   Serial.println("Started");
 
+  for(int i = 0; i < 3000; i++) {
+    vec_GyroY[i] = 0;
+  }
+
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
     while (1)
       ;
   }
+
+
 
   // los datos de los sensores se muestrean cada 5 ms
   timer.setInterval(Tmuestreo);
@@ -54,9 +60,12 @@ void loop() {
     if (IMU.gyroscopeAvailable()) {  // unidades grados por segundo
       IMU.readGyroscope(x_giro, y_giro, z_giro);
     }
-
-    vec_GyroY[cont_vecGyroY] = z_giro;  // la Ygyro del pie es la Zgyro del arduino
     cont_vecGyroY = cont_vecGyroY + 1;
+    vec_GyroY[cont_vecGyroY] = z_giro;  // la Ygyro del pie es la Zgyro del arduino
+    Serial.println (vec_GyroY[cont_vecGyroY],2);
+    Serial.print ("contador: "); 
+    Serial.println (cont_vecGyroY);
+    
 
     flagTimerSample = false;
   }
@@ -65,12 +74,12 @@ void loop() {
   switch (estadoActual) {
 
     case REPOSO:
-      Serial.println ("estoy en REPOSO"); 
-      Serial.println (z_giro,2);
-      Serial.print ("contador: "); 
-      Serial.println (cont_vecGyroY);
+      //Serial.println ("estoy en REPOSO"); 
+      //Serial.println (vec_GyroY[cont_vecGyroY],2);
+      //Serial.print ("contador: "); 
+      //Serial.println (cont_vecGyroY);
 
-      if (vec_GyroY[cont_vecGyroY] < -rango_detect_0) {
+      if (vec_GyroY[cont_vecGyroY] < -rango_detect) {
         pos_subida20 = cont_vecGyroY;
 
         Serial.println ("SUBIENDO");
@@ -97,7 +106,7 @@ void loop() {
     case BAJANDO:
       if ((vec_GyroY[cont_vecGyroY] > -rango_detect_0) && (vec_GyroY[cont_vecGyroY] < rango_detect_0)) {
         pos_final_bajada = cont_vecGyroY;
-        for (int i = 0; i < VECTOR_SIZE; i++) {
+        for (int i = 0; i < 3000; i++) {
           vec_copiaGyroY[i] = vec_GyroY[i];
         }
 
