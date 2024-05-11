@@ -7,7 +7,7 @@
 float vec_GyroY[tamanoVector], vec_copiaGyroY[tamanoVector];
 float x_giro, y_giro, z_giro;
 int cont_vecGyroY = 0, pos_subida20, pos_bajada20, pos_final_bajada, pos_final_subida, pos_mantener, Tmuestreo = 25;
-float rango_detect = 60.0, rango_detect_0 = 1.0;
+float rango_detect = 50.0, rango_detect_0 = 0.3;
 bool flagTimerSample = false;
 
 Timer timer;
@@ -90,7 +90,7 @@ void loop() {
     case SUBIENDO:
       if ((vec_GyroY[cont_vecGyroY] > -rango_detect_0) && (vec_GyroY[cont_vecGyroY] < rango_detect_0)) {
         pos_final_subida = cont_vecGyroY;
-        Serial.print ("contador_bajada: "); 
+        Serial.print ("final subida contador: "); 
         Serial.println (pos_final_subida);
         Serial.println ("MANTENER");
         estadoActual = MANTENER;
@@ -100,7 +100,7 @@ void loop() {
     case MANTENER:
       if (vec_GyroY[cont_vecGyroY] > rango_detect) {
         pos_bajada20 = cont_vecGyroY;
-        Serial.print ("contador_bajada: "); 
+        Serial.print ("contador_bajada 20: "); 
         Serial.println (pos_bajada20);
         Serial.println ("BAJANDO");
         estadoActual = BAJANDO;
@@ -125,71 +125,72 @@ void loop() {
     case PROCESADO:
 
       int i = pos_subida20;
-      float acc = 0.0, angulo_final_subida, angulo20subida, angulo_medio, angulo_max = 0.0, angulo_min = 0.0;
+      float acc = 0.0, angulo_final_subida, angulo20subida, angulo_medio, angulo_min_final, angulo_max_final, angulo_max = 0.0, angulo_min = 0.0;
       float tiempo20_subida, tiempo20_bajada, tmantener, tsubida, tTotal;
 
       // integracion y tiempo de la subida
-      Serial.print ("vector[pos_subida20]");
-      Serial.println (vec_copiaGyroY[i],2);
       while (vec_copiaGyroY[i] < -rango_detect_0) {
         acc = acc + vec_copiaGyroY[i];
-        Serial.print ("i barrido");
-        Serial.println (i);
         i = i - 1;
       }
-      Serial.print ("i al final del barrido pos subida 20:  ");
-      Serial.println (i);
+      
       tiempo20_subida = (pos_subida20 - i) * float (Tmuestreo)/1000 ;
-      angulo20subida = acc * Tmuestreo;
+      angulo20subida = acc * float(Tmuestreo) / 1000;
       acc = 0.0;
 
       for (i = pos_subida20; i < pos_final_subida; i++) {
         acc = acc + vec_copiaGyroY[i];
       }
+
       tsubida = tiempo20_subida + (pos_final_subida - pos_subida20) * float(Tmuestreo) / 1000 ;  // Tiempo que tarda en ponerse de puntillas
-      angulo_final_subida = angulo20subida + acc * Tmuestreo;   // angulo maximo
+      angulo_final_subida = angulo20subida + acc * float(Tmuestreo) / 1000;   // angulo maximo
+      Serial.print ("angulo_final_subida: ");
+      Serial.println (angulo_final_subida,2);
 
       // integracion y tiempo de la bajada
       acc = 0.0;
       int j = pos_bajada20;
 
-      while (vec_copiaGyroY[j] < -rango_detect_0) {
+      while (vec_copiaGyroY[j] > -rango_detect_0) {
         j = j - 1;
       }
       pos_mantener = j;
+      Serial.print ("pos_mantener: ");
+      Serial.println (pos_mantener);
 
       float angulos_mantener[pos_mantener - pos_final_subida];
       
       j = 0;
       for (i = pos_final_subida; i < pos_mantener; i++) {
         acc = acc + vec_copiaGyroY[i];
-        angulos_mantener[j] = acc * Tmuestreo;
+        angulos_mantener[j] = acc * float(Tmuestreo) / 1000;
         j = j + 1;
       }
-      angulo_medio = angulo_final_subida + (acc * Tmuestreo) / (pos_mantener - pos_final_subida);
+      angulo_medio = angulo_final_subida + (acc * float(Tmuestreo) / 1000) / (pos_mantener - pos_final_subida);
 
-      for (i = 0; i < (pos_mantener - pos_final_subida); i++) {
+      for (i = 0; i < (pos_mantener - pos_final_subida); i++) { 
         if(angulos_mantener[i] > angulo_max)
           angulo_max = angulos_mantener[i];
         if(angulos_mantener[i] < angulo_min)
           angulo_min = angulos_mantener[i];
       }
-      angulo_max = angulo_max + angulo_final_subida;
-      angulo_min = angulo_min + angulo_final_subida;
+      angulo_min_final = angulo_max + angulo_final_subida;
+      angulo_max_final = angulo_min + angulo_final_subida;
+      
 
       //RESULTADOS
-
+      tmantener = (pos_mantener - pos_final_subida)* float(Tmuestreo) / 1000;
       tTotal = tsubida + (pos_final_bajada - pos_final_subida) * float(Tmuestreo) / 1000;  // tiempo que permanece de puntillas
-      Serial.print ("tiempoSubida20: ");
-      Serial.println (tiempo20_subida,2);
       Serial.print ("tiempo que tarda en ponerse de puntillas: ");
       Serial.println (tsubida,2);
+      Serial.print ("tiempo mantener arriba: ");
+      Serial.println (tmantener,2);
       Serial.print ("tiempo que tarda en hacer el movimiento: ");
       Serial.println (tTotal,2);
       Serial.print ("angulo maximo: ");
-      Serial.println (angulo_max,2);
+      Serial.println (angulo_max_final,2);
       Serial.print ("angulo minimo: "); 
-      Serial.println (angulo_min,2);
+      Serial.println (angulo_min_final,2);
       Serial.print ("angulo medio: "); 
       Serial.println (angulo_medio,2);
       Serial.println ("REPOSO");    
