@@ -126,22 +126,28 @@ void loop() {
 
       int i = pos_subida20;
       float acc = 0.0, angulo_final_subida, angulo20subida, angulo_medio, angulo_max = 0.0, angulo_min = 0.0;
-      float tiempo20_subida, tiempo20_bajada, tmantener, tsubida, tmantenerybajada, tTotal;
+      float tiempo20_subida, tiempo20_bajada, tmantener, tsubida, tTotal;
 
       // integracion y tiempo de la subida
+      Serial.print ("vector[pos_subida20]");
+      Serial.println (vec_copiaGyroY[i],2);
       while (vec_copiaGyroY[i] < -rango_detect_0) {
         acc = acc + vec_copiaGyroY[i];
+        Serial.print ("i barrido");
+        Serial.println (i);
         i = i - 1;
       }
-      tiempo20_subida = (pos_subida20 - i) * Tmuestreo /1000;
+      Serial.print ("i al final del barrido pos subida 20:  ");
+      Serial.println (i);
+      tiempo20_subida = (pos_subida20 - i) * float (Tmuestreo)/1000 ;
       angulo20subida = acc * Tmuestreo;
       acc = 0.0;
 
       for (i = pos_subida20; i < pos_final_subida; i++) {
         acc = acc + vec_copiaGyroY[i];
       }
-      tsubida = tiempo20_subida + (pos_final_subida - pos_subida20) * Tmuestreo/1000;  // Tiempo que tarda en ponerse de puntillas
-      angulo_final_subida = angulo20subida + acc * Tmuestreo;                     // angulo maximo
+      tsubida = tiempo20_subida + (pos_final_subida - pos_subida20) * float(Tmuestreo) / 1000 ;  // Tiempo que tarda en ponerse de puntillas
+      angulo_final_subida = angulo20subida + acc * Tmuestreo;   // angulo maximo
 
       // integracion y tiempo de la bajada
       acc = 0.0;
@@ -172,13 +178,13 @@ void loop() {
       angulo_min = angulo_min + angulo_final_subida;
 
       //RESULTADOS
-      tmantenerybajada = (pos_final_bajada - pos_final_subida) * Tmuestreo;
-      tTotal = tsubida + tmantenerybajada;  // tiempo que permanece de puntillas
+
+      tTotal = tsubida + (pos_final_bajada - pos_final_subida) * float(Tmuestreo) / 1000;  // tiempo que permanece de puntillas
       Serial.print ("tiempoSubida20: ");
       Serial.println (tiempo20_subida,2);
       Serial.print ("tiempo que tarda en ponerse de puntillas: ");
       Serial.println (tsubida,2);
-      Serial.print ("tiempo que permanece de puntillas: ");
+      Serial.print ("tiempo que tarda en hacer el movimiento: ");
       Serial.println (tTotal,2);
       Serial.print ("angulo maximo: ");
       Serial.println (angulo_max,2);
