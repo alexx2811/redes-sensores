@@ -16,7 +16,7 @@ BLEByteCharacteristic resetCharacteristic("19B10002-E8F2-537E-4F6C-D104768A1214"
 #define tamanoVector 5000
 float vec_GyroY[tamanoVector], vec_copiaGyroY[tamanoVector]; //vectores en los que se almacenan los valores de aceleracion
 float x_giro, y_giro, z_giro;
-int cont_vecGyroY = 0, pos_subida20, pos_bajada20, pos_final_bajada, pos_final_subida, pos_mantener, Tmuestreo = 20;
+int cont_vecGyroY = 0, pos_subida, pos_bajada, pos_final_bajada, pos_final_subida, pos_mantener, Tmuestreo = 20;
 float rango_detect = 50.0, rango_detect_0 = 0.2; //rangos para detectivar el movimiento y la parada
 bool flagTimerSample = false; //flag interrupcion
 bool resetEnabled = true; //para resetear una medida y comenzar otra
@@ -127,17 +127,17 @@ void loop() {
         switch (estadoActual) {
 
           case REPOSO:
-            if (vec_GyroY[cont_vecGyroY] < -rango_detect) {
-              pos_subida20 = cont_vecGyroY;
+            if (vec_GyroY[cont_vecGyroY] < -rango_detect) { //si se ha superado el umbral de movimiento para la subida (w negativa)
+              pos_subida = cont_vecGyroY;
               Serial.print("contador_subida: ");
-              Serial.println(pos_subida20);
+              Serial.println(pos_subida);
               Serial.println("SUBIENDO");
               estadoActual = SUBIENDO;
             }
             break;
 
           case SUBIENDO:
-            if ((vec_GyroY[cont_vecGyroY] > -rango_detect_0) && (vec_GyroY[cont_vecGyroY] < rango_detect_0)) {
+            if ((vec_GyroY[cont_vecGyroY] > -rango_detect_0) && (vec_GyroY[cont_vecGyroY] < rango_detect_0)) { //si se detiene el movimiento
               pos_final_subida = cont_vecGyroY;
               Serial.print("final subida contador: ");
               Serial.println(pos_final_subida);
@@ -147,25 +147,24 @@ void loop() {
             break;
 
           case MANTENER:
-            if (vec_GyroY[cont_vecGyroY] > rango_detect) {
-              pos_bajada20 = cont_vecGyroY;
-              Serial.print("contador_bajada 20: ");
-              Serial.println(pos_bajada20);
+            if (vec_GyroY[cont_vecGyroY] > rango_detect) { //si se ha superado el umbral de movimiento para la bajada (w positiva)
+              pos_bajada = cont_vecGyroY;
+              Serial.print("contador_bajada: ");
+              Serial.println(pos_bajada);
               Serial.println("BAJANDO");
               estadoActual = BAJANDO;
             }
             break;
 
           case BAJANDO:
-            if ((vec_GyroY[cont_vecGyroY] > -rango_detect_0) && (vec_GyroY[cont_vecGyroY] < rango_detect_0)) {
+            if ((vec_GyroY[cont_vecGyroY] > -rango_detect_0) && (vec_GyroY[cont_vecGyroY] < rango_detect_0)) { //si se detiene el movimiento, ha acabado el ejercicio
               pos_final_bajada = cont_vecGyroY;
               Serial.print("contador_final: ");
               Serial.println(pos_final_bajada);
-              for (int i = 0; i < tamanoVector; i++) {
+              for (int i = 0; i < tamanoVector; i++) { //Se copia el vector de velocidades para poder procesarlo
                 vec_copiaGyroY[i] = vec_GyroY[i];
               }
-
-              cont_vecGyroY = 0;
+              cont_vecGyroY = 0; // se reinicia el contador para volver a rellenar el vector en la siguiente repeticion del ejercicio
               Serial.println("PROCESADO");
               estadoActual = PROCESADO;
             }
@@ -173,68 +172,67 @@ void loop() {
 
           case PROCESADO:
 
-            int i = pos_subida20;
-            float acc = 0.0, angulo_final_subida, angulo20subida, angulo_medio, angulo_min_final, angulo_max_final, angulo_max = 0.0, angulo_min = 0.0;
-            float tiempo20_subida, tiempo20_bajada, tmantener, tsubida, tTotal;
+            float acc = 0.0, angulo_final_subida, angulo_subida, angulo_medio, angulo_min_final, angulo_max_final, angulo_max = 0.0, angulo_min = 0.0;
+            float tini_subida, tini_bajada, tmantener, tsubida, tTotal;
 
-            // integracion y tiempo de la subida
-            while (vec_copiaGyroY[i] < -rango_detect_0) {
+            // integracion (angulo) y tiempo del tramo que detecta el comienzo de la subida
+            int i = pos_subida;
+            while (vec_copiaGyroY[i] < -rango_detect_0) { //se recorre hacia atras hasta detectar el 0
               acc = acc + vec_copiaGyroY[i];
               i = i - 1;
             }
 
-            tiempo20_subida = (pos_subida20 - i) * float(Tmuestreo) / 1000;
-            angulo20subida = acc * float(Tmuestreo) / 1000;
-            acc = 0.0;
+            tini_subida = (pos_subida - i) * float(Tmuestreo) / 1000; //numero de posiciones desplazadas * Tmuestreo
+            angulo_subida = acc * float(Tmuestreo) / 1000; //integral para obtener el angulo
+            acc = 0.0; //reiniciamos el acumulador de la integral para volver a usarlo
 
-            for (i = pos_subida20; i < pos_final_subida; i++) {
+            for (i = pos_subida; i < pos_final_subida; i++) { //se recorre el resto del tramo de subida
               acc = acc + vec_copiaGyroY[i];
             }
 
-            tsubida = tiempo20_subida + (pos_final_subida - pos_subida20) * float(Tmuestreo) / 1000;  // Tiempo que tarda en ponerse de puntillas
-            angulo_final_subida = angulo20subida + acc * float(Tmuestreo) / 1000;                     // angulo maximo
+            tsubida = tini_subida + (pos_final_subida - pos_subida) * float(Tmuestreo) / 1000;  // Tiempo que tarda en ponerse de puntillas
+            angulo_final_subida = angulo_subida + acc * float(Tmuestreo) / 1000;  
             Serial.print("angulo_final_subida: ");
             Serial.println(angulo_final_subida, 2);
 
             // integracion y tiempo de la bajada
             acc = 0.0;
-            int j = pos_bajada20;
-
-            while (vec_copiaGyroY[j] > -rango_detect_0) {
+            int j = pos_bajada;
+            while (vec_copiaGyroY[j] > -rango_detect_0) { //se recorre hacia atras hasta detectar el 0
               j = j - 1;
             }
             pos_mantener = j;
             Serial.print("pos_mantener: ");
             Serial.println(pos_mantener);
 
-            float angulos_mantener[pos_mantener - pos_final_subida];
+            float angulos_mantener[pos_mantener - pos_final_subida]; //vector de angulos durante el tramo de mantenerse de puntillas (angulo medio, max, min)
 
             j = 0;
             for (i = pos_final_subida; i < pos_mantener; i++) {
-              acc = acc + vec_copiaGyroY[i];
-              angulos_mantener[j] = acc * float(Tmuestreo) / 1000;
+              acc = acc + vec_copiaGyroY[i]; //se almacenan las velocidades para integrar y obtener el angulo medio posteriormente 
+              angulos_mantener[j] = acc * float(Tmuestreo) / 1000; //integrando, se calcula el angulo en cada Tmuestreo
               j = j + 1;
             }
-            angulo_medio = angulo_final_subida + (acc * float(Tmuestreo) / 1000) / (pos_mantener - pos_final_subida);
+            angulo_medio = angulo_final_subida + (acc * float(Tmuestreo) / 1000) / (pos_mantener - pos_final_subida); // Sumatorio angulos / nº muestras, añadiendole el angulo que hay al final de la subida
 
-            for (i = 0; i < (pos_mantener - pos_final_subida); i++) {
+            for (i = 0; i < (pos_mantener - pos_final_subida); i++) { //calculo de angulos maximo y minimo
               if (angulos_mantener[i] > angulo_max)
                 angulo_max = angulos_mantener[i];
               if (angulos_mantener[i] < angulo_min)
                 angulo_min = angulos_mantener[i];
             }
-            angulo_min_final = angulo_max + angulo_final_subida;
-            angulo_max_final = angulo_min + angulo_final_subida;
+            angulo_min_final = angulo_max + angulo_final_subida; //logica inversa ya que los datos tienen signo negativo
+            angulo_max_final = angulo_min + angulo_final_subida; //a dichos angulos se le añade el angulo que hay al final de la subida
 
 
             //RESULTADOS
-            tmantener = (pos_mantener - pos_final_subida) * float(Tmuestreo) / 1000;
-            tTotal = tsubida + (pos_final_bajada - pos_final_subida) * float(Tmuestreo) / 1000;  // tiempo que permanece de puntillas
+            tmantener = (pos_mantener - pos_final_subida) * float(Tmuestreo) / 1000; //tiempo que se mantiene de puntillas
+            tTotal = tsubida + (pos_final_bajada - pos_final_subida) * float(Tmuestreo) / 1000;  // tiempo total del ejercicio
 
             Serial.print("tiempo que tarda en ponerse de puntillas: ");
             Serial.println(tsubida, 2);
             String tsubidaStr = String (tsubida);
-            tsubida_Characteristic.writeValue(tsubidaStr.c_str());
+            tsubida_Characteristic.writeValue(tsubidaStr.c_str()); //conversion float - String - const char para visualizacion en NRF Connect
 
             Serial.print("tiempo mantener arriba: ");
             Serial.println(tmantener, 2);
@@ -261,11 +259,10 @@ void loop() {
 
             Serial.println("REPOSO");
             estadoActual = REPOSO;
-            resetEnabled = false; //desactiva el proceso para tener que activarlo cada vez que se usa
+            resetEnabled = false; //desactiva el proceso para tener que activarlo cada vez que se usa en NRF Connect
             break;
         }
         timer.update();
-        
       }
     }
 
