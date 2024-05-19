@@ -4,6 +4,7 @@
 #include "timer.h"
 #include <ArduinoBLE.h>
 
+//Declaracion del servicio BLE y sus caracteristicas
 BLEService parkinsonService("19B10000-E8F2-537E-4F6C-D104768A1214");
 BLECharacteristic tsubida_Characteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify,512);
 BLECharacteristic tTotal_Characteristic("19B10001-E8F2-537E-4F6C-D104768A1215", BLERead | BLENotify,512);
@@ -12,15 +13,13 @@ BLECharacteristic angulomin_Characteristic("19B10001-E8F2-537E-4F6C-D104768A1217
 BLECharacteristic angulomedio_Characteristic("19B10001-E8F2-537E-4F6C-D104768A1218", BLERead | BLENotify,512);
 BLEByteCharacteristic resetCharacteristic("19B10002-E8F2-537E-4F6C-D104768A1214", BLEWrite);
 
-bool resetEnabled = true;
-
 #define tamanoVector 5000
-float vec_GyroY[tamanoVector], vec_copiaGyroY[tamanoVector];
+float vec_GyroY[tamanoVector], vec_copiaGyroY[tamanoVector]; //vectores en los que se almacenan los valores de aceleracion
 float x_giro, y_giro, z_giro;
 int cont_vecGyroY = 0, pos_subida20, pos_bajada20, pos_final_bajada, pos_final_subida, pos_mantener, Tmuestreo = 20;
-float rango_detect = 50.0, rango_detect_0 = 0.2;
-bool flagTimerSample = false;
-
+float rango_detect = 50.0, rango_detect_0 = 0.2; //rangos para detectivar el movimiento y la parada
+bool flagTimerSample = false; //flag interrupcion
+bool resetEnabled = true; //para resetear una medida y comenzar otra
 Timer timer;
 
 void SampleCallback() {
@@ -39,31 +38,30 @@ enum Estado {
 Estado estadoActual = REPOSO;  // Estado inicial de la máquina de estados
 
 void setup() {
-  // Inicializar el puerto serie para la comunicación
-  Serial.begin(9600);
+  
+  Serial.begin(9600); // Inicializar el puerto serie para la comunicación
   while (!Serial)
     ;
   Serial.println("Started");
 
-  for (int i = 0; i < tamanoVector; i++) {
+  for (int i = 0; i < tamanoVector; i++) { // Inicializar el vector de aceleraciones en Y a 0.
     vec_GyroY[i] = 0;
   }
 
-  if (!IMU.begin()) {
+  if (!IMU.begin()) { // Inicializar IMU
     Serial.println("Failed to initialize IMU!");
     while (1)
       ;
   }
 
-  if (!BLE.begin()) {
+  if (!BLE.begin()) { // Inicializar Bluetooth
     Serial.println("Failed to initialize BLE!");
     while (1)
       ;
   }
 
-  BLE.setLocalName("Arduino Nano 33 BLE");
+  BLE.setLocalName("Arduino Nano 33 BLE"); 
   BLE.setAdvertisedService(parkinsonService);
-
   parkinsonService.addCharacteristic(tsubida_Characteristic);
   parkinsonService.addCharacteristic(tTotal_Characteristic);
   parkinsonService.addCharacteristic(angulomax_Characteristic);
@@ -79,12 +77,12 @@ void setup() {
   angulomedio_Characteristic.setValue(0);
   resetCharacteristic.setValue(0);
 
-  BLE.advertise();  // comienza la publicidad del servicio BLE
+  BLE.advertise();  //  El servicio BLE se anuncia para poder conectarse
 
   Serial.println("BLE Accelerometer Peripheral");
 
 
-  // los datos de los sensores se muestrean cada 5 ms
+  // los datos de los sensores se muestrean cada Tmuestreo ms
   timer.setInterval(Tmuestreo);
   timer.setCallback(SampleCallback);
   timer.start();
@@ -99,20 +97,20 @@ void loop() {
     Serial.println(central.address());
 
     while (central.connected()) {
-      if (resetCharacteristic.written()) {
+      if (resetCharacteristic.written()) { 
         // numero entero sin signo de 8 bits (almacena valores entre el 0 y 255)
         uint8_t value;
         resetCharacteristic.readValue(value);
 
         if (value == 1) {
           resetEnabled = true;
-          Serial.println("Accelerometer enabled");
+          Serial.println("Accelerometer enabled"); //se activa el acelerometro y se procede a medir el movimiento de puntillas
         }
 
         resetCharacteristic.setValue(0);
       }
 
-      if (resetEnabled) {
+      if (resetEnabled) { //se ejecuta cuando activamos la opcion en NRFConnect
         
         if (flagTimerSample) {             
           //Interrupcion
@@ -125,7 +123,7 @@ void loop() {
           flagTimerSample = false;
         }
 
-        // Ejecutar el código correspondiente al estado actual
+        // Ejecuta el código correspondiente al estado actual
         switch (estadoActual) {
 
           case REPOSO:
