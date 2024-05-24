@@ -6,3 +6,5 @@ En general, si el presupuesto y consumo de energía son los factores más releva
 se requiere un amplio rango de aceleración y alta precisión del giróscopo, el dispositivo ASM330LHBGT1R sería el más adecuado.
 
 Sin embargo, para esta aplicación en concreto, los tres dispositivos serían posibles candidatos para ser utilizados. 
+
+![image](https://github.com/alexx2811/redes-sensores/assets/157799271/eb84df39-ee80-4d99-8188-d93bba716083)
